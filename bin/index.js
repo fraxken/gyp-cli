@@ -62,6 +62,7 @@ async function init() {
 
     let target_name = "binding";
     let hasNodeAddonApi = false;
+    let hasNAN = false;
     let hasIncludeDir = false;
 
     // Retrieve information from package.json
@@ -73,6 +74,7 @@ async function init() {
 
         const dependencies = pkg.dependencies || {};
         hasNodeAddonApi = Reflect.has(dependencies, "node-addon-api");
+        hasNAN = Reflect.has(dependencies, "nan");
         spinPkg.succeed();
     }
     catch (err) {
@@ -112,10 +114,17 @@ async function init() {
         include_dirs.push("<!@(node -p \"require('node-addon-api').include\")");
         Reflect.set(target, "dependencies", ["<!(node -p \"require('node-addon-api').gyp\")"]);
     }
+    if (hasNAN) {
+        include_dirs.push("<!(node -e \"require('nan')\")");
+    }
     bindings.targets.push(target);
 
     await writeFile(join(CWD, "binding.gyp"), JSON.stringify(bindings, null, 4));
     console.log(green("\n Successfully initialized binding.gyp"));
+}
+
+async function update() {
+    // do things!
 }
 
 /**
@@ -127,9 +136,11 @@ async function main() {
     const argv = commander
         .version("1.0.0")
         .option("-i, --init", "initialize gyp file")
+        .option("-u, --update", "update binding.gyp file")
         .parse(process.argv);
 
     const initBindingGyp = Boolean(argv.init);
+    const updateBindingGyp = Boolean(argv.update);
     if (initBindingGyp) {
         console.log(gray("\n > Initializing binding.gyp\n"));
         await init();
