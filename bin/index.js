@@ -101,21 +101,20 @@ async function init() {
 
     const include_dirs = [];
     const bindings = { targets: [] };
-    const target = {
-        target_name,
-        sources,
-        include_dirs
-    };
+    const target = { target_name, sources, include_dirs };
 
     if (hasIncludeDir) {
         include_dirs.push("include");
     }
     if (hasNodeAddonApi) {
         include_dirs.push("<!@(node -p \"require('node-addon-api').include\")");
-        Reflect.set(target, "dependencies", ["<!(node -p \"require('node-addon-api').gyp\")"]);
+        target.dependencies = ["<!(node -p \"require('node-addon-api').gyp\")"];
     }
     if (hasNAN) {
         include_dirs.push("<!(node -e \"require('nan')\")");
+    }
+    if (include_dirs.length === 0) {
+        delete target.include_dirs;
     }
     bindings.targets.push(target);
 
@@ -123,8 +122,14 @@ async function init() {
     console.log(green("\n Successfully initialized binding.gyp"));
 }
 
+/**
+ * @async
+ * @func update
+ * @returns {Promise<void>}
+ */
 async function update() {
-    // do things!
+    // TODO: Check for node-addon-api or nan
+    // TODO:
 }
 
 /**
@@ -144,6 +149,13 @@ async function main() {
     if (initBindingGyp) {
         console.log(gray("\n > Initializing binding.gyp\n"));
         await init();
+
+        return;
+    }
+
+    if (updateBindingGyp) {
+        console.log(gray("\n > Updating binding.gyp\n"));
+        await update();
 
         return;
     }
