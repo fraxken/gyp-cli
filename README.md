@@ -5,6 +5,12 @@
 
 npm CLI to create and manage .gyp files
 
+## Features
+
+- Initialize **binding.gyp** file for you.
+- Search all `.cc` and `.cpp` files in the local tree.
+- Auto include both `nan` and `node-addon-api`.
+
 ## Getting Started
 
 This package is available in the Node Package Repository and can be easily installed with [npm](https://docs.npmjs.com/getting-started/what-is-npm) or [yarn](https://yarnpkg.com).
@@ -12,6 +18,6 @@ This package is available in the Node Package Repository and can be easily insta
 ```bash
 $ npm i gyp-cli
 # or
-$ yarn add
+$ yarn add gyp-cli
 # or
 ```
