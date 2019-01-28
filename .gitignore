@@ -59,4 +59,5 @@ typings/
 
 # JSDoc
 docs/
+src/config.json
 binding.gyp

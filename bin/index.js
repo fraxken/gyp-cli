@@ -8,8 +8,11 @@ const { join, extname, relative } = require("path");
 
 // Third-party Dependencies
 const commander = require("commander");
-const { gray, green, red } = require("kleur");
+const { gray, green, yellow, red } = require("kleur");
 const ora = require("ora");
+
+// Internal
+let localConfig;
 
 // CONSTANTS
 const C_EXT = new Set([".c", ".cc", ".cpp"]);
@@ -129,7 +132,7 @@ async function init() {
  */
 async function update() {
     // TODO: Check for node-addon-api or nan
-    // TODO:
+    // TODO: Check for sources files ?
 }
 
 /**
@@ -138,14 +141,37 @@ async function update() {
  * @returns {Promise<void>}
  */
 async function main() {
+    const configPath = join(__dirname, "..", "src", "config.json");
+    if (existsSync(configPath)) {
+        const buf = await readFile(configPath);
+        localConfig = JSON.parse(buf.toString());
+    }
+    else {
+        localConfig = {};
+        await writeFile(configPath, JSON.stringify(localConfig, null, 4));
+    }
+
     const argv = commander
         .version("1.0.0")
         .option("-i, --init", "initialize gyp file")
         .option("-u, --update", "update binding.gyp file")
+        .option("-s, --set <key>")
         .parse(process.argv);
 
+    // Retrieve argv
     const initBindingGyp = Boolean(argv.init);
     const updateBindingGyp = Boolean(argv.update);
+    const setKey = typeof argv.set === "string";
+
+    if (setKey) {
+        const [key, value] = argv.set.split("=");
+        localConfig[key] = value;
+        console.log(gray(`\n > Set new config key "${yellow(key)}" with value: ${yellow(value)}\n`));
+        await writeFile(configPath, JSON.stringify(localConfig, null, 4));
+
+        return;
+    }
+
     if (initBindingGyp) {
         console.log(gray("\n > Initializing binding.gyp\n"));
         await init();
