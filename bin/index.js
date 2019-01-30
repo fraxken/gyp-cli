@@ -10,6 +10,7 @@ const { join, extname, relative } = require("path");
 const commander = require("commander");
 const { gray, green, yellow, red } = require("kleur");
 const ora = require("ora");
+const diff = require("json-diff");
 
 // Internal
 let localConfig;
@@ -122,7 +123,9 @@ async function init() {
     bindings.targets.push(target);
 
     await writeFile(join(CWD, "binding.gyp"), JSON.stringify(bindings, null, 4));
-    console.log(green("\n Successfully initialized binding.gyp"));
+    console.log(gray("\n binding.gyp"));
+    console.log(gray(diff.diffString({}, bindings)));
+    console.log("");
 }
 
 /**
@@ -202,7 +205,7 @@ async function main() {
     }
 
     if (initBindingGyp) {
-        console.log(gray("\n > Initializing binding.gyp\n"));
+        console.log(gray("\n > Generate binding.gyp\n"));
         await init();
 
         return;
