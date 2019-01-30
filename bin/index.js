@@ -131,7 +131,36 @@ async function init() {
  * @returns {Promise<void>}
  */
 async function update() {
-    // TODO: Check for node-addon-api or nan
+    if (!existsSync(join(CWD, "binding.gyp"))) {
+        console.log(red("Unable to found binding.gyp, can't to trigger update!"));
+        process.exit(0);
+    }
+
+    const gypStr = await readFile(join(CWD, "binding.gyp"), { encoding: "utf8" });
+    const bindings = JSON.parse(gypStr);
+    let hasNodeAddonApi = false;
+    let hasNAN = false;
+
+    // Retrieve information from package.json
+    const spinPkg = ora("Parsing local package.json...").start();
+    try {
+        const str = await readFile(join(CWD, "package.json"), { encoding: "utf8" });
+        const pkg = JSON.parse(str);
+
+        const dependencies = pkg.dependencies || {};
+        hasNodeAddonApi = Reflect.has(dependencies, "node-addon-api");
+        hasNAN = Reflect.has(dependencies, "nan");
+        spinPkg.succeed();
+    }
+    catch (err) {
+        // do nothing
+        spinPkg.fail();
+    }
+
+    // C & C++ source files!
+    const spinSources = ora("Search for .cc and .cpp files in the local tree...").start();
+    const sources = (await searchTree(CWD)).map((file) => relative(CWD, file));
+    spinSources.succeed();
     // TODO: Check for sources files ?
 }
 
