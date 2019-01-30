@@ -27,6 +27,7 @@
     "homepage": "https://github.com/fraxken/gyp-cli#readme",
     "dependencies": {
         "commander": "^2.19.0",
+        "json-diff": "^0.5.3",
         "kleur": "^3.0.1",
         "make-promises-safe": "^4.0.0",
         "ora": "^3.0.0"
