@@ -105,7 +105,9 @@ async function init() {
 
     const include_dirs = [];
     const bindings = { targets: [] };
-    const target = { target_name, sources, include_dirs };
+    const target = {
+        target_name, sources, include_dirs, defines: ["NAPI_DISABLE_CPP_EXCEPTIONS"]
+    };
 
     if (hasIncludeDir) {
         include_dirs.push("include");
