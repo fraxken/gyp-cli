@@ -75,7 +75,17 @@ async function init() {
     const include_dirs = [];
     const bindings = { targets: [] };
     const target = {
-        target_name, sources, include_dirs, defines: ["NAPI_DISABLE_CPP_EXCEPTIONS"]
+        target_name,
+        sources,
+        include_dirs,
+        defines: ["NAPI_DISABLE_CPP_EXCEPTIONS"],
+        "cflags!": ["-fno-exceptions"],
+        "cflags_cc!": ["-fno-exceptions"],
+        msvs_settings: {
+            VCCLCompilerTool: {
+                ExceptionHandling: 1
+            }
+        }
     };
 
     if (hasIncludeDir) {
