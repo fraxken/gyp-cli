@@ -1,7 +1,9 @@
 # gyp-cli
+![ver](https://img.shields.io/badge/dynamic/json.svg?url=https://raw.githubusercontent.com/fraxken/gyp-cli/master/package.json&query=$.version&label=Version)
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/SlimIO/is/commit-activity)
 ![MIT](https://img.shields.io/github/license/mashape/apistatus.svg)
-![V0.1.0](https://img.shields.io/badge/version-0.1.0-blue.svg)
+![dep](https://img.shields.io/david/fraxken/gyp-cli.svg)
+![size](https://img.shields.io/github/languages/code-size/fraxken/gyp-cli.svg)
 
 npm CLI to create and manage .gyp files
 
