@@ -3,54 +3,22 @@ require("make-promises-safe");
 
 // Node.js Dependencies
 const { existsSync } = require("fs");
-const { readFile, writeFile, readdir, stat, access } = require("fs").promises;
-const { join, extname, relative } = require("path");
+const { readFile, writeFile, access } = require("fs").promises;
+const { join, relative } = require("path");
 
 // Third-party Dependencies
 const commander = require("commander");
-const { gray, green, yellow, red } = require("kleur");
+const { gray, yellow, red, white, cyan } = require("kleur");
 const ora = require("ora");
 const diff = require("json-diff");
+const cacache = require("cacache");
 
-// Internal
-let localConfig;
+// Require Internal Dependencies
+const { searchTree } = require("../src/utils");
 
 // CONSTANTS
-const C_EXT = new Set([".c", ".cc", ".cpp"]);
-const EXCLUDE_PATH = new Set(["node_modules", ".git"]);
 const CWD = process.cwd();
-
-/**
- * @async
- * @func searchTree
- * @param {!String} dir directory
- * @returns {Promise<void>}
- */
-async function searchTree(dir) {
-    const list = await readdir(dir);
-    const lstats = await Promise.all(list.map((fd) => stat(join(dir, fd))));
-    const ret = [];
-    const dirs = [];
-
-    for (let id = 0; id < list.length; id++) {
-        const fd = list[id];
-        if (EXCLUDE_PATH.has(fd)) {
-            continue;
-        }
-        if (C_EXT.has(extname(fd))) {
-            ret.push(join(dir, fd));
-            continue;
-        }
-        if (lstats[id].isDirectory()) {
-            dirs.push(fd);
-        }
-    }
-    const subRet = await Promise.all(
-        dirs.map((sDir) => searchTree(join(dir, sDir)))
-    );
-
-    return Object.assign(ret, ...subRet);
-}
+const CACHE_PATH = "/tmp/gyp-cli";
 
 /**
  * @async
@@ -60,7 +28,7 @@ async function searchTree(dir) {
 async function init() {
     const bindingExist = existsSync(join(CWD, "binding.gyp"));
     if (bindingExist) {
-        console.log(red("Unable to initialize, binding.gyp already exist!"));
+        console.log(red().bold("Unable to initialize, binding.gyp already exist!"));
         process.exit(0);
     }
 
@@ -70,7 +38,7 @@ async function init() {
     let hasIncludeDir = false;
 
     // Retrieve information from package.json
-    const spinPkg = ora("Parsing local package.json...").start();
+    const spinPkg = ora(white().bold("Parsing local package.json...")).start();
     try {
         const str = await readFile(join(CWD, "package.json"), { encoding: "utf8" });
         const pkg = JSON.parse(str);
@@ -87,19 +55,20 @@ async function init() {
     }
 
     // Detect if we have a root ./include directory
-    const spinInclude = ora("/include dir exist").start();
+    const spinInclude = ora(white().bold("/include dir exist")).start();
     try {
         await access(join(CWD, "include"));
         hasIncludeDir = true;
         spinInclude.succeed();
     }
     catch (err) {
-        // do nothing
         spinInclude.fail();
     }
 
     // C & C++ source files!
-    const spinSources = ora("Search for .cc and .cpp files in the local tree...").start();
+    const spinSources = ora(
+        white().bold(`Search for ${yellow().bold(".cc")} and ${yellow().bold(".cpp")} files in the local tree...`)
+    ).start();
     const sources = (await searchTree(CWD)).map((file) => relative(CWD, file));
     spinSources.succeed();
 
@@ -125,8 +94,8 @@ async function init() {
     bindings.targets.push(target);
 
     await writeFile(join(CWD, "binding.gyp"), JSON.stringify(bindings, null, 4));
-    console.log(gray("\n binding.gyp"));
-    console.log(gray(diff.diffString({}, bindings)));
+    console.log(gray().bold("\n binding.gyp"));
+    console.log(gray().bold(diff.diffString({}, bindings)));
     console.log("");
 }
 
@@ -175,49 +144,39 @@ async function update() {
  * @returns {Promise<void>}
  */
 async function main() {
-    const configPath = join(__dirname, "..", "src", "config.json");
-    if (existsSync(configPath)) {
-        const buf = await readFile(configPath);
-        localConfig = JSON.parse(buf.toString());
-    }
-    else {
-        localConfig = {};
-        await writeFile(configPath, JSON.stringify(localConfig, null, 4));
-    }
-
     const argv = commander
         .version("1.0.0")
         .option("-i, --init", "initialize gyp file")
         .option("-u, --update", "update binding.gyp file")
         .option("-s, --set <key>")
+        .option("-g, --get <key>")
         .parse(process.argv);
 
-    // Retrieve argv
-    const initBindingGyp = Boolean(argv.init);
-    const updateBindingGyp = Boolean(argv.update);
-    const setKey = typeof argv.set === "string";
-
-    if (setKey) {
+    if (typeof argv.set === "string") {
         const [key, value] = argv.set.split("=");
-        localConfig[key] = value;
-        console.log(gray(`\n > Set new config key "${yellow(key)}" with value: ${yellow(value)}\n`));
-        await writeFile(configPath, JSON.stringify(localConfig, null, 4));
-
-        return;
+        console.log(cyan().bold(`\n > Set new config key "${yellow().bold(key)}" with value: ${yellow().bold(value)}\n`));
+        await cacache.put(CACHE_PATH, key, value);
     }
 
-    if (initBindingGyp) {
-        console.log(gray("\n > Generate binding.gyp\n"));
+    else if (typeof argv.get === "string") {
+        try {
+            const value = (await cacache.get(CACHE_PATH, argv.get)).data.toString();
+            console.log(value);
+            console.log(white().bold(`\n> Requested key '${yellow().bold(argv.get)}' has value => ${cyan().bold(value)}`));
+        }
+        catch (err) {
+            console.log(red().bold(`\n> Requested key '${yellow().bold(argv.get)}' not found in the local cache!`));
+        }
+    }
+
+    else if (argv.init) {
+        console.log(cyan().bold("\n > Generate binding.gyp\n"));
         await init();
-
-        return;
     }
 
-    if (updateBindingGyp) {
-        console.log(gray("\n > Updating binding.gyp\n"));
+    else if (argv.update) {
+        console.log(cyan().bold("\n > Updating binding.gyp\n"));
         await update();
-
-        return;
     }
 }
 main().catch(console.error);
