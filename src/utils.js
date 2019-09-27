@@ -1,3 +1,5 @@
+"use strict";
+
 // Node.js Dependencies
 const { readdir, stat } = require("fs").promises;
 const { join, extname } = require("path");
@@ -12,9 +14,9 @@ const EXCLUDE_PATH = new Set(["node_modules", ".git"]);
 
 /**
  * @async
- * @func searchTree
+ * @function searchTree
  * @memberof utils#
- * @param {!String} dir directory
+ * @param {!string} dir directory
  * @returns {Promise<void>}
  */
 async function searchTree(dir) {

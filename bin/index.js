@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+"use strict";
+
 require("make-promises-safe");
 
 // Node.js Dependencies
@@ -22,7 +24,7 @@ const CACHE_PATH = "/tmp/gyp-cli";
 
 /**
  * @async
- * @func init
+ * @function init
  * @returns {Promise<void>}
  */
 async function init() {
@@ -111,7 +113,7 @@ async function init() {
 
 /**
  * @async
- * @func update
+ * @function update
  * @returns {Promise<void>}
  */
 async function update() {
@@ -150,7 +152,7 @@ async function update() {
 
 /**
  * @async
- * @func main
+ * @function main
  * @returns {Promise<void>}
  */
 async function main() {
