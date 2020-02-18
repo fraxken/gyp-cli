@@ -26,7 +26,7 @@
     },
     "homepage": "https://github.com/fraxken/gyp-cli#readme",
     "dependencies": {
-        "cacache": "^13.0.0",
+        "cacache": "^15.0.0",
         "commander": "^3.0.2",
         "json-diff": "^0.5.4",
         "kleur": "^3.0.3",
