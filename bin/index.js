@@ -43,10 +43,9 @@ async function init() {
     const spinPkg = ora(white().bold("Parsing local package.json...")).start();
     try {
         const str = await readFile(join(CWD, "package.json"), { encoding: "utf8" });
-        const pkg = JSON.parse(str);
-        target_name = pkg.name;
+        const { name, dependencies = {} } = JSON.parse(str);
+        target_name = name;
 
-        const dependencies = pkg.dependencies || {};
         hasNodeAddonApi = Reflect.has(dependencies, "node-addon-api");
         hasNAN = Reflect.has(dependencies, "nan");
         spinPkg.succeed();
